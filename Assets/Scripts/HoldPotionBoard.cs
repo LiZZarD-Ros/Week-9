@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class HoldPotionBoard : MonoBehaviour
 {
@@ -28,6 +29,12 @@ public class HoldPotionBoard : MonoBehaviour
     [SerializeField]
     List<Potion> potionsToRemove = new();
 
+    public int coins;
+    public TMP_Text coinsTxt;
+
+    public AudioSource potionPlayer;
+    public AudioClip coinSound;
+
 
     //layoutArray
     public ArrayLayout arrayLayout;
@@ -42,10 +49,14 @@ public class HoldPotionBoard : MonoBehaviour
     void Start()
     {
         InitializeBoard();
+        potionPlayer = GetComponent<AudioSource>();
     }
 
     private void Update()
     {
+        
+        coinsTxt.text = coins.ToString() + "g";
+
         if (Input.GetMouseButtonDown(0))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -66,11 +77,14 @@ public class HoldPotionBoard : MonoBehaviour
 
     void InitializeBoard()
     {
+        potionPlayer.gameObject.SetActive(false);
         DestroyPotions();
         potionBoard = new Node[width, height];
 
         spacingX = (float)(width - 1) / 2;
         spacingY = (float)((height - 1) / 2) + 1;
+
+        
 
         for (int y = 0; y < height; y++)
         {
@@ -103,6 +117,32 @@ public class HoldPotionBoard : MonoBehaviour
         {
             Debug.Log("There are no matches, it's time to start the game!");
         }
+        
+        potionPlayer.gameObject.SetActive(true);
+
+        LoadCoins();
+    }
+
+    void LoadCoins()
+    {
+        if (PlayerPrefs.HasKey("SavedCoins"))
+        {
+            coins = PlayerPrefs.GetInt("SavedCoins");
+            Debug.Log("Coins loaded from PlayerPrefs: " + coins);
+        }
+        else
+        {
+            Debug.Log("No coins found in PlayerPrefs, setting to default (0).");
+            coins = 0;
+        }
+    }
+
+    void UpdateCoins(int amount)
+    {
+        coins += amount;
+        coinsTxt.text = coins.ToString() + "g"; // Update UI text
+        Debug.Log("Coins updated: " + coins);
+
     }
 
     private void DestroyPotions()
@@ -320,6 +360,8 @@ public class HoldPotionBoard : MonoBehaviour
                 if (extraConnectedPotions.Count >= 2)
                 {
                     Debug.Log("I have a super Horizontal Match");
+                    UpdateCoins(2);
+                    potionPlayer.PlayOneShot(coinSound);
                     extraConnectedPotions.AddRange(_matchedResults.connectedPotions);
 
                     //return our super match
@@ -352,6 +394,8 @@ public class HoldPotionBoard : MonoBehaviour
                 if (extraConnectedPotions.Count >= 2)
                 {
                     Debug.Log("I have a super Vertical Match");
+                    UpdateCoins(2);
+                    potionPlayer.PlayOneShot(coinSound);
                     extraConnectedPotions.AddRange(_matchedResults.connectedPotions);
                     //return our super match
                     return new MatchResult
@@ -387,7 +431,8 @@ public class HoldPotionBoard : MonoBehaviour
         if (connectedPotions.Count == 3)
         {
             Debug.Log("I have a normal horizontal match, the color of my match is: " + connectedPotions[0].potionType);
-
+            UpdateCoins(1);
+            potionPlayer.PlayOneShot(coinSound);
             return new MatchResult
             {
                 connectedPotions = connectedPotions,
@@ -398,7 +443,8 @@ public class HoldPotionBoard : MonoBehaviour
         else if (connectedPotions.Count > 3)
         {
             Debug.Log("I have a Long horizontal match, the color of my match is: " + connectedPotions[0].potionType);
-
+            UpdateCoins(1);
+            potionPlayer.PlayOneShot(coinSound);
             return new MatchResult
             {
                 connectedPotions = connectedPotions,
@@ -419,7 +465,8 @@ public class HoldPotionBoard : MonoBehaviour
         if (connectedPotions.Count == 3)
         {
             Debug.Log("I have a normal vertical match, the color of my match is: " + connectedPotions[0].potionType);
-
+            UpdateCoins(1);
+            potionPlayer.PlayOneShot(coinSound);
             return new MatchResult
             {
                 connectedPotions = connectedPotions,
@@ -430,7 +477,8 @@ public class HoldPotionBoard : MonoBehaviour
         else if (connectedPotions.Count > 3)
         {
             Debug.Log("I have a Long vertical match, the color of my match is: " + connectedPotions[0].potionType);
-
+            UpdateCoins(1);
+            potionPlayer.PlayOneShot(coinSound);
             return new MatchResult
             {
                 connectedPotions = connectedPotions,
